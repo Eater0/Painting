@@ -1,0 +1,29 @@
+#pragma kernel CSMain
+
+StructuredBuffer<float3> _Vertices;
+RWStructuredBuffer<float3> _Color;
+
+uint _VertexCount;
+
+float4x4 _Object;
+
+float3 _PaintingBrushPosition;
+float _Radius;
+float _Power;
+
+[numthreads(64, 1, 1)]
+void CSMain (uint id : SV_DispatchThreadID)
+{
+    if (id >= _VertexCount)
+        return;
+    
+    float3 worldPos = mul(_Object, float4(_Vertices[id], 1)).xyz;
+
+    float value = min(distance(worldPos, _PaintingBrushPosition) / _Radius, 1);
+    
+    if (_Color[id].y > value)
+    {
+        value *= _Power;
+        _Color[id] = float3(1, value, value);
+    }
+}
